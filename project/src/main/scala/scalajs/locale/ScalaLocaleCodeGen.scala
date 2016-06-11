@@ -60,7 +60,6 @@ object CodeGenerator {
     }
   }
 
-
   def buildClassTree(root: XMLLDML, langs: List[List[String]])(ldml: XMLLDML): Tree = {
     val ldmlSym = getModule("LDML")
     val ldmlLocaleSym = getModule("LDMLLocale")
@@ -112,8 +111,8 @@ object ScalaLocaleCodeGen {
     XMLLDML(XMLLDMLLocale(language, territory, variant, script))
   }
 
-  val parser: SAXParser = {
-    // Use a non validating parser for speed
+  // Note this must be a def or there could be issues with concurrency
+  def parser: SAXParser = {
     val f = SAXParserFactory.newInstance()
     f.setNamespaceAware(false)
     f.setValidating(false)

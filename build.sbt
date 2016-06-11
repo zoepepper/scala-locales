@@ -4,17 +4,18 @@ import LDMLTasks._
 
 val cldrVersion = settingKey[String]("The version of CLDR used.")
 lazy val downloadFromZip: TaskKey[Unit] =
-  taskKey[Unit]("Download the sbt zip and extract it to ./temp")
+  taskKey[Unit]("Download the sbt zip and extract it")
 
 val commonSettings: Seq[Setting[_]] = Seq(
   version := "0.1.0-SNAPSHOT",
-  organization := "com.github.cquiroz.scala-js",
+  organization := "com.github.cquiroz",
   scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.10.4", "2.11.8"),
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings"),
-  /*mappings in (Compile, packageBin) ~= {
-    _.filter(!_._2.endsWith(".class"))
-  },*/
+  mappings in (Compile, packageBin) ~= {
+    // Exclude CLDR files...
+    _.filter(!_._2.contains("core"))
+  },
   exportJars := true,
 
   publishMavenStyle := true,
@@ -40,15 +41,16 @@ val commonSettings: Seq[Setting[_]] = Seq(
 lazy val root: Project = project.in(file("."))
   .settings(commonSettings)
   .settings(
-      publish := {},
-      publishLocal := {}
+    name := "scala-locales",
+    publish := {},
+    publishLocal := {}
   )
   .aggregate(coreJS, coreJVM, testSuiteJS, testSuiteJVM)
 
 lazy val core: CrossProject = crossProject.crossType(CrossType.Pure).
   settings(commonSettings: _*).
   settings(
-    name := "scalajs-java-locale",
+    name := "scala-locales",
     cldrVersion := "29",
     downloadFromZip := {
       val xmlFiles = ((resourceDirectory in Compile) / "core").value
@@ -80,17 +82,19 @@ lazy val testSuite: CrossProject = CrossProject(
   jsConfigure(_.enablePlugins(ScalaJSJUnitPlugin)).
   settings(commonSettings: _*).
   settings(
+    publish := {},
+    publishLocal := {},
     testOptions +=
       Tests.Argument(TestFramework("com.novocode.junit.JUnitFramework"),
         "-v", "-a")
   ).
   jsSettings(
-    name := "java locale testSuite on JS",
+    name := "scala locale testSuite on JS",
     scalaJSUseRhino := false
   ).
   jsConfigure(_.dependsOn(coreJS)).
   jvmSettings(
-    name := "java locale testSuite on JVM",
+    name := "scala locale testSuite on JVM",
     libraryDependencies +=
       "com.novocode" % "junit-interface" % "0.9" % "test"
   ).
